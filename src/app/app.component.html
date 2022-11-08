@@ -1,4 +1,21 @@
-<button (click)="clearSelection()">Clear Selection</button>
+<div class="card" style="margin-left: 300px;">
+<div>
+  <input
+    type="text"
+    (input)="onQuickFilterChanged()"
+    id="quickFilter"
+    placeholder="search"
+  />
+  
+<button (click)="clearSelection()" style="margin-left:110px;">Clear Selection</button>
+
+  <button
+    (click)="onBtExport()"
+    style="margin-left:auto;font-weight: bold;"
+  >
+    Export to Excel
+  </button>
+</div>
 <ag-grid-angular
    class="ag-theme-alpine"
    style="height:500px;width:500px;"
@@ -7,9 +24,11 @@
    [defaultColDef]="defaultColDef"
    [rowSelection]="rowSelection"
    [suppressRowClickSelection]="true"
-   [isRowSelectable]="isRowSelectable"
+  
    [rowData]="rowData"
+   [pagination]="true"
    (firstDataRendered)="onFirstDataRendered($event)"
    (gridReady)="onGridReady($event)"
   
  ></ag-grid-angular>
+</div>

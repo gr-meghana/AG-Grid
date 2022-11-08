@@ -1,8 +1,9 @@
 import { HttpClient } from '@angular/common/http';
 import { Component, ViewChild } from '@angular/core';
 import { AgGridAngular } from 'ag-grid-angular';
-import { ColDef, GridReadyEvent, CellClickedEvent, IsRowSelectable, RowNode, FirstDataRenderedEvent, CellEditingStartedEvent, CellEditingStoppedEvent, RowEditingStartedEvent, RowEditingStoppedEvent, ICellEditorParams } from 'ag-grid-community';
-import { Observable } from 'rxjs';
+import { ColDef, GridReadyEvent, IsRowSelectable, RowNode, FirstDataRenderedEvent,  GridApi} from 'ag-grid-community';
+import { CellComponent } from './app.cell-component';
+import 'ag-grid-enterprise';
 import { Book } from './book';
 
 @Component({
@@ -11,30 +12,31 @@ import { Book } from './book';
   styleUrls: ['./app.component.scss']
 })
 export class AppComponent  {
+
+  private gridApi!: GridApi<Book>;
   title = 'AG-Grid';
-  
+  complete =['true','false'];
  public colDefs: ColDef[] = [
   { 
     field: 'userId',
     headerCheckboxSelection: true,
-    checkboxSelection: true,
-    showDisabledCheckboxes: true,
+      headerCheckboxSelectionFilteredOnly: true,
+      checkboxSelection: true,
   },
   { field: 'id'},
   { 
     field: 'title' , 
-    editable: true, 
     cellEditor: 'agTextCellEditor' 
   },
   {
     field:'completed', 
-    editable: true,
-    cellEditor:'agSelectCellEditor',
+    cellRenderer:CellComponent,
+    cellEditor:'agRichSelectCellEditor',
     cellEditorPopup: true,
     cellEditorParams: {
-      cellHeight: 50,
-      values: ['true', 'false'],
-    }
+      values: this.complete,
+      cellRenderer:CellComponent,
+    },
   }
 ];
 
@@ -42,22 +44,29 @@ export class AppComponent  {
 public defaultColDef: ColDef = {
   sortable: true,
   filter: true,
+  editable: true,
 };
+
 public rowSelection: 'single' | 'multiple' = 'multiple';
-public isRowSelectable: IsRowSelectable = (params: RowNode<Book>) => {
-  return !!params.data 
-};
+
 public rowData!: Book[];
 
-
+onQuickFilterChanged() {
+  this.gridApi.setQuickFilter(
+    (document.getElementById('quickFilter') as HTMLInputElement).value
+  );
+}
 
 
 @ViewChild(AgGridAngular) agGrid!: AgGridAngular;
 
 constructor(private http: HttpClient) {}
 
-
+onBtExport() {
+  this.gridApi.exportDataAsExcel();
+}
 onGridReady(params: GridReadyEvent) {
+  this.gridApi = params.api;
   this.http
     .get<Book[]>(' https://jsonplaceholder.typicode.com/todos').subscribe((data:any) => (this.rowData = data));
 }
