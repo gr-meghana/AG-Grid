@@ -22,17 +22,23 @@ export class AppComponent  {
     headerCheckboxSelection: true,
       headerCheckboxSelectionFilteredOnly: true,
       checkboxSelection: true,
+      
   },
-  { field: 'id'},
+  { field: 'id',
+  enablePivot: true},
   { 
     field: 'title' , 
-    cellEditor: 'agTextCellEditor' 
+    cellEditor: 'agTextCellEditor' ,
+  
   },
   {
     field:'completed', 
     cellRenderer:CellComponent,
     cellEditor:'agRichSelectCellEditor',
     cellEditorPopup: true,
+    rowGroup:true,
+    
+    
     cellEditorParams: {
       values: this.complete,
       cellRenderer:CellComponent,
@@ -45,6 +51,7 @@ public defaultColDef: ColDef = {
   sortable: true,
   filter: true,
   editable: true,
+  enablePivot: true,
 };
 
 public rowSelection: 'single' | 'multiple' = 'multiple';
@@ -64,7 +71,12 @@ constructor(private http: HttpClient) {}
 
 onBtExport() {
   this.gridApi.exportDataAsExcel();
+  
 }
+onBtCVSExport(){
+this.gridApi.exportDataAsCsv();
+}
+
 onGridReady(params: GridReadyEvent) {
   this.gridApi = params.api;
   this.http
