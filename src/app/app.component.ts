@@ -1,10 +1,12 @@
 import { HttpClient } from '@angular/common/http';
+
 import { Component, ViewChild } from '@angular/core';
 import { AgGridAngular } from 'ag-grid-angular';
-import { ColDef, GridReadyEvent, IsRowSelectable, RowNode, FirstDataRenderedEvent,  GridApi} from 'ag-grid-community';
-import { CellComponent } from './app.cell-component';
+import { ColDef, GridReadyEvent, FirstDataRenderedEvent,  GridApi} from 'ag-grid-community';
+
 import 'ag-grid-enterprise';
 import { Book } from './book';
+
 
 @Component({
   selector: 'app-root',
@@ -12,7 +14,7 @@ import { Book } from './book';
   styleUrls: ['./app.component.scss']
 })
 export class AppComponent  {
-
+   regex = new RegExp('^[a-z]');
   private gridApi!: GridApi<Book>;
   title = 'AG-Grid';
   complete =['true','false'];
@@ -22,26 +24,65 @@ export class AppComponent  {
     headerCheckboxSelection: true,
       headerCheckboxSelectionFilteredOnly: true,
       checkboxSelection: true,
-      
+      valueGetter: (params) => {
+        return params.data.userId;
+      },
+      valueSetter: (params) => {
+        var newValInt = parseInt(params.newValue);
+        var valueChanged = params.data.userId !== newValInt;
+        if (valueChanged) {
+          params.data.userId = newValInt;
+        }
+        
+        return valueChanged;
+       
+      },
   },
-  { field: 'id',
-  enablePivot: true},
-  { 
-    field: 'title' , 
-    cellEditor: 'agTextCellEditor' ,
-  
+  {
+    headerName:'Id',
+    valueGetter: (params) => {
+      return params.data.id;
+    },
+    valueSetter: (params) => {
+      var newValInt = parseInt(params.newValue);
+      var valueChanged = params.data.id !== newValInt;
+      if (valueChanged) {
+        params.data.id = newValInt;
+      }
+      return valueChanged;
+    },
+
+    
+},
+  { field:'title',
+   
+    cellEditor: 'agTextCellEditor',
+    valueGetter: (params) => {
+      return params.data.title;
+    },
+    valueSetter: (params) => {
+     
+     var newVal = params.newValue;
+     
+      var valueChanged = params.data.title !== newVal;
+      
+     if(valueChanged){
+      if(this.regex.test(newVal)){
+      params.data.title = newVal;
+     }
+     
+    }
+    return valueChanged;
+      
+    },
+    cellStyle:(params)=>this.regex.test(params.value)==true?{background:''}:{background:'red'}
   },
   {
     field:'completed', 
-    cellRenderer:CellComponent,
     cellEditor:'agRichSelectCellEditor',
     cellEditorPopup: true,
-    rowGroup:true,
-    
-    
     cellEditorParams: {
-      values: this.complete,
-      cellRenderer:CellComponent,
+      values: this.complete, 
     },
   }
 ];
@@ -52,17 +93,31 @@ public defaultColDef: ColDef = {
   filter: true,
   editable: true,
   enablePivot: true,
+  resizable: true,
+  onCellValueChanged:this.onCellValueChanged
 };
+onCellValueChanged(params:any) {
+  if (params.oldValue !== params.newValue) {
+      var column = params.column.colDef.field;
+            params.column.colDef.cellStyle = { 'background-color': 'cyan' };
+            params.api.refreshCells({
+                force: true,
+                columns: [column],
+                rowNodes: [params.node]
+        });
+  }}
 
 public rowSelection: 'single' | 'multiple' = 'multiple';
 
 public rowData!: Book[];
+onlyWhenGrouping: "onlyWhenGrouping"|"always"|"never"|undefined;
 
 onQuickFilterChanged() {
   this.gridApi.setQuickFilter(
     (document.getElementById('quickFilter') as HTMLInputElement).value
   );
 }
+
 
 
 @ViewChild(AgGridAngular) agGrid!: AgGridAngular;
@@ -94,4 +149,8 @@ onFirstDataRendered(params: FirstDataRenderedEvent<Book>) {
 clearSelection(): void {
   this.agGrid.api.deselectAll();
 }
+
 }
+
+
+
